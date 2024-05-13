@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-button-header-black: 0, 0, 0;
+    --color-button-header-white: 255, 255, 255;
+    --color-gray: 196, 196, 196;
+
+    --color-dark-charcoal: #303336;
+    --color-gray-charcoal: #444953;
+    --color-white-charcoal: #e3e5ed;
+
+    --color-dark-blue-text: #323555;
+    --color-gray-text: #81899a;
+
+    --color-white-footer: #f2f3f7;
+
+
+    --color-green: #32bf7b;
+  }
+}
