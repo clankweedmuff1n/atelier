@@ -27,6 +27,11 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.findAll();
     }
 
+    public List<Product> getAllProductsById(List<Long> productIds) {
+        return productRepository.findAllById(productIds);
+    }
+
+
     public Product getById(Long id) {
         return productRepository.findById(id)
                 .orElse(null);

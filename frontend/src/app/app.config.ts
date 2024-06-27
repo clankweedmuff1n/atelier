@@ -9,17 +9,20 @@ import {CategoryState} from "./store/category/state/Category.state";
 import {GalleryItemState} from "./store/galleryItem/state/GalleryItem.state";
 import {AuthState} from "./store/auth/state/Auth.state";
 import {NgxsStoragePluginModule} from "@ngxs/storage-plugin";
-import {IMAGE_CONFIG} from "@angular/common";
+import {IMAGE_LOADER, ImageLoaderConfig} from "@angular/common";
+import {environment} from "../environments/environment";
+import {CartState} from "./store/cart/state/Cart.state";
+import {WishListState} from "./store/wishlist/state/Cart.state";
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
     {
-      provide: IMAGE_CONFIG,
-      useValue: {
-        breakpoints: [16, 48, 96, 128, 384, 640, 750, 828, 1080, 1200, 1920]
-      }
+      provide: IMAGE_LOADER,
+      useValue: (config: ImageLoaderConfig) => {
+        return `${environment.apiUrl}/files/get?src=${config.src}&width=${config.width}`;
+      },
     },
-    importProvidersFrom(HttpClientModule, NgxsStoragePluginModule.forRoot(), NgxsModule.forRoot([ProductState, CategoryState, GalleryItemState, AuthState]))
+    importProvidersFrom(HttpClientModule, NgxsStoragePluginModule.forRoot(), NgxsModule.forRoot([ProductState, CategoryState, GalleryItemState, AuthState, CartState, WishListState]))
   ]
 };

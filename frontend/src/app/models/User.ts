@@ -1,4 +1,5 @@
 import {RoleEnum} from "./enums/Role.enum";
+import {Product} from "./Product";
 
 export interface User {
   id: number;
@@ -8,4 +9,6 @@ export interface User {
   confirmed: boolean;
   password: string;
   role: RoleEnum;
+  cart: Product[];
+  wishlist: Product[];
 }

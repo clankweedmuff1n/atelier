@@ -2,8 +2,7 @@ import {Action, Selector, State, StateContext} from "@ngxs/store";
 import {Injectable} from "@angular/core";
 import {GalleryItemService} from "../service/GalleryItem.service";
 import {tap} from "rxjs";
-import {GalleryItem} from "../../../models/galleryItem";
-import {environment} from "../../../../environments/environment";
+import {GalleryItem} from "../../../models/GalleryItem";
 
 export class GetAllGalleryItem {
   static readonly type = '[GalleryItem] Get All';
@@ -31,9 +30,7 @@ export class GalleryItemState {
         const state = ctx.getState();
         ctx.setState({
           ...state,
-          galleryItems: response.map(galleryItem => {
-            return galleryItem.image.includes("http") ? galleryItem : {id: galleryItem.id, image: `${environment.apiUrl}/files/${galleryItem.image}`};
-          })
+          galleryItems: response,
         })
       })
     );

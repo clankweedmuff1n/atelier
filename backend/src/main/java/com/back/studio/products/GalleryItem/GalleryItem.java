@@ -19,6 +19,10 @@ public class GalleryItem {
     private Long id;
     @JsonProperty("image")
     private String imageUrl;
+    private String name;
+    private String alt;
+    private int width;
+    private int height;
     /*@ManyToOne
     @JoinColumn(name = "category_id")
     @JsonIgnore

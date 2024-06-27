@@ -5,8 +5,8 @@ import { map } from 'rxjs/operators';
 import {environment} from "../../../../environments/environment";
 import {User} from "../../../models/User";
 import {RegistrationRequest} from "../../../models/RegistrationRequest";
-import {AuthenticationResponse} from "../../../models/AuthenticationResponse";
-import {AuthenticationRequest} from "../../../models/AuthenticationRequest";
+import {AuthenticationResponse} from "../../../models/responses/AuthenticationResponse";
+import {AuthenticationRequest} from "../../../models/requests/AuthenticationRequest";
 
 @Injectable({
   providedIn: 'root',

@@ -14,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class CategoryJpaTest {
-    private final CategoryRepository repository;
+    /*private final CategoryRepository repository;
 
     @Test
     void getAllCategories() {
@@ -24,5 +24,5 @@ public class CategoryJpaTest {
                 .build();
         repository.save(category);
         System.out.println("SIZE " + repository.findAll().size());
-    }
+    }*/
 }

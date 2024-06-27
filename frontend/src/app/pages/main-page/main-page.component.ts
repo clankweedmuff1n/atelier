@@ -10,7 +10,7 @@ import {DELETEComponent} from "../../components/delete/delete.component";
 import {Select, Store} from "@ngxs/store";
 import {GetAllProduct, ProductState} from "../../store/product/state/Product.state";
 import {Observable} from "rxjs";
-import {Product} from "../../models/product";
+import {Product} from "../../models/Product";
 
 @Component({
   selector: 'app-main-page',
@@ -41,6 +41,7 @@ export class MainPageComponent {
   @Select(ProductState.selectError) error$!: Observable<Error | undefined>;
 
   constructor(private store: Store) {
+    //localStorage.clear();
     /*this.products$.subscribe({
       next: (products) => {
         this.loading$.subscribe({

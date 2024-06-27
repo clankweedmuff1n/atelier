@@ -1,10 +1,11 @@
-import {Action, Selector, State, StateContext} from "@ngxs/store";
+import {Action, Selector, State, StateContext, Store} from "@ngxs/store";
 import {Injectable} from "@angular/core";
 import {catchError, tap, throwError} from "rxjs";
 import {AuthService} from "../service/Auth.service";
-import {AuthenticationResponse} from "../../../models/AuthenticationResponse";
+import {AuthenticationResponse} from "../../../models/responses/AuthenticationResponse";
 import {HttpErrorResponse} from "@angular/common/http";
 import {User} from "../../../models/User";
+import {AddAllProductsToCart, ResetCart} from "../../cart/state/Cart.state";
 
 export interface AuthStateModel {
   token: string | null;
@@ -56,7 +57,7 @@ export class AuthState {
     return !!state.token;
   }
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService, private store: Store) {}
 
   @Action(Login)
   login(ctx: StateContext<AuthStateModel>, action: Login) {
@@ -67,6 +68,10 @@ export class AuthState {
           email: action.payload.email,
           user: result.user
         });
+        const cartProducts = ctx.getState().user?.cart || [];
+        if (cartProducts.length > 0) {
+          this.store.dispatch(new AddAllProductsToCart(cartProducts, result.access_token));
+        }
       }),
       catchError((error: HttpErrorResponse) => {
         return throwError(() => error.error instanceof ProgressEvent ? new Error("Server Error") : error.error);
@@ -83,6 +88,10 @@ export class AuthState {
           email: action.payload.email,
           user: result.user,
         });
+        const cartProducts = ctx.getState().user?.cart || [];
+        if (cartProducts.length > 0) {
+          this.store.dispatch(new AddAllProductsToCart(cartProducts, result.access_token));
+        }
       })
     );
   }
@@ -106,6 +115,7 @@ export class AuthState {
       email: null,
       user: null,
     });
+    this.store.dispatch(new ResetCart());
     /*return this.authService.logout(state.token).pipe(
       tap(() => {
         ctx.setState({

@@ -33,13 +33,13 @@ import { Component } from '@angular/core';
         <div class="pb-8">
           <h2 class="uppercase font-medium text-sm mb-2.5 lg:mb-5">FOLLOW US</h2>
           <ul class="list-none">
-            <li class="mb-1.5 opacity-90 text-sm no-wrap flex items-center">
+            <!--<li class="mb-1.5 opacity-90 text-sm no-wrap flex items-center">
               <svg class="mr-2.5 w-[15px] h-[15px] opacity-60" viewBox="0 0 9 17">
                 <path
                   d="M5.842 17V9.246h2.653l.398-3.023h-3.05v-1.93c0-.874.246-1.47 1.526-1.47H9V.118C8.718.082 7.75 0 6.623 0 4.27 0 2.66 1.408 2.66 3.994v2.23H0v3.022h2.66V17h3.182z"></path>
               </svg>
               Facebook
-            </li>
+            </li>-->
             <a href="https://www.instagram.com/volnova.brand?igsh=MTY1a3ZqYTN2NWQwcg%3D%3D&utm_source=qr">
               <li class="mb-1.5 opacity-90 text-sm no-wrap flex items-center">
                 <svg class="mr-2.5 w-[15px] h-[15px] opacity-60" width="48px" height="48px" viewBox="0 0 48 48"

@@ -2,8 +2,7 @@ import {Action, Selector, State, StateContext} from "@ngxs/store";
 import {Injectable} from "@angular/core";
 import {CategoryService} from "../service/Category.service";
 import {tap} from "rxjs";
-import {Category} from "../../../models/category";
-import {environment} from "../../../../environments/environment";
+import {Category} from "../../../models/Category";
 
 export class GetAllCategory {
   static readonly type = '[Category] Get All';
@@ -31,12 +30,7 @@ export class CategoryState {
         const state = ctx.getState();
         ctx.setState({
           ...state,
-          categories: response.map(category => {
-            category.gallery = category.gallery.map(galleryItem => {
-              return galleryItem.image.includes("http") ? galleryItem : {id: galleryItem.id, image: `${environment.apiUrl}/files/${galleryItem.image}`};
-            })
-            return category;
-          })
+          categories: response
         });
       })
     );

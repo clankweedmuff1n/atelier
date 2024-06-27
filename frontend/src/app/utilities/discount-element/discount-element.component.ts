@@ -9,7 +9,7 @@ import {Component, Input} from '@angular/core';
       <h2 class="pt-2.5 text-sm">
         {{ title }}
       </h2>
-      <p class="text-sm py-2.5">
+      <p class="text-center text-sm py-2.5">
         {{ description }}
       </p>
       <div class="flex w-full">
@@ -23,8 +23,8 @@ import {Component, Input} from '@angular/core';
   `,
 })
 export class DiscountElementComponent {
-  @Input() title: string = "10% off your first order";
-  @Input() description: string = "Sign up for new arrivals, markdowns, and more";
-  @Input() buttonText: string = "Subscribe";
-  @Input() placeholder: string = "Email";
+  @Input() title: string = "Получите скидку 10% на ваш первый заказ!";
+  @Input() description: string = "Подпишитесь для того чтобы узнавать про новые поступления, скидки и многое другое!";
+  @Input() buttonText: string = "Подписаться";
+  @Input() placeholder: string = "E-mail";
 }

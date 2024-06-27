@@ -7,6 +7,7 @@
     --color-button-header-black: 0, 0, 0;
     --color-button-header-white: 255, 255, 255;
     --color-gray: 196, 196, 196;
+    --color-black: 17, 17, 17;
 
     --color-dark-charcoal: #303336;
     --color-gray-charcoal: #444953;
@@ -20,4 +21,8 @@
 
     --color-green: #32bf7b;
   }
+}
+
+img {
+  min-width: 0;
 }

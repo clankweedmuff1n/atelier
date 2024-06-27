@@ -1,42 +1,16 @@
-import {Component} from '@angular/core';
-import {forkJoin} from "rxjs";
-import {ProductRequest} from "../../models/requests/productRequest";
-import {CategoryRequest} from "../../models/requests/categoryRequest";
-import {ProductService} from "../../store/product/service/Product.service";
-import {CategoryService} from "../../store/category/service/Category.service";
-import {GalleryItemService} from "../../store/galleryItem/service/GalleryItem.service";
+import { Component } from '@angular/core';
+import { forkJoin, Observable } from 'rxjs';
+import { ProductRequest } from '../../models/requests/productRequest';
+import { CategoryRequest } from '../../models/requests/categoryRequest';
+import { ProductService } from '../../store/product/service/Product.service';
+import { CategoryService } from '../../store/category/service/Category.service';
+import { GalleryItemService } from '../../store/galleryItem/service/GalleryItem.service';
+import { map, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-delete',
   standalone: true,
-  imports: [],
   template: `
-    <!--<ng-container *ngFor="let element of elements; index as i">
-            <div
-                    class="flex w-full max-w-6xl m-auto flex-col md:flex-row"
-                    [class]="i % 2 !== 0 ? 'md:flex-row-reverse' : 'md:flex-row'">
-
-                <button (click)="printCat()">test</button>
-
-                <div class="w-full relative before:block before:pt-[100%]">
-                    <div class="absolute inset-0 flex flex-col">
-                        <img class="object-cover w-full h-full" [alt]="element.title" [src]="element.image"/>
-                    </div>
-                </div>
-
-                <div class="bg-pink-50 w-full relative before:block before:pt-[100%]">
-                    <div class="px-16 absolute inset-0 flex flex-col items-center justify-center ">
-                        <h3 class="mb-6">{{ element.title }}</h3>
-                        <p class="text-center mb-4">{{ element.caption }}</p>
-                        <button class="hover:after:inset-0 after:-z-10 after:bg-pink-300 after:bg-opacity-60 after:w-full after:h-full after:absolute after:top-2.5 after:left-2.5 after:transition-all px-5 py-3.5 outline-0 border border-black cursor-pointer relative select-none z-10">
-                            {{ element.button }}
-                        </button>
-                    </div>
-                </div>
-
-
-            </div>
-        </ng-container>-->
     <section class="flex justify-center w-full p-10">
       <button (click)="addCategories()"
               class="hover:after:inset-0 after:-z-10 after:bg-pink-300 after:bg-opacity-60 after:w-full after:h-full after:absolute after:top-2.5 after:left-2.5 after:transition-all px-5 py-3.5 outline-0 border border-black cursor-pointer relative select-none z-10">
@@ -46,370 +20,113 @@ import {GalleryItemService} from "../../store/galleryItem/service/GalleryItem.se
   `
 })
 export class DELETEComponent {
-  constructor(private categoriesService: CategoryService, private galleryItemService: GalleryItemService, private productService: ProductService) {
+  constructor(
+    private categoriesService: CategoryService,
+    private galleryItemService: GalleryItemService,
+    private productService: ProductService
+  ) { }
+
+  getImageDimensions(imageSrc: string | File): Observable<{ width: number, height: number }> {
+    return new Observable(observer => {
+      const img = new Image();
+      img.onload = () => {
+        observer.next({ width: img.width, height: img.height });
+        observer.complete();
+      };
+      img.onerror = err => observer.error(err);
+      img.src = typeof imageSrc === 'string' ? imageSrc : URL.createObjectURL(imageSrc);
+    });
   }
 
   addCategories() {
-    let dressesCategoryId = -1;
-    let sportsCategoryId = -1;
-    let blazerCategoryId = -1;
-    let costumesCategoryId = -1;
-    let blouseCategoryId = -1;
-    let trousersCategoryId = -1;
+    const categories = [
+      { name: "Платья", description: "Платья для женщин на любой случай", link: "dresses", buttonText: "Перейти в каталог", images: this.firstProductImages },
+      { name: "Спортивные костюмы", description: "Костюмы в стиле Sport-style отличаются по крою и материалам", link: "sport", buttonText: "Перейти в каталог", images: this.secondProductImages },
+      { name: "Пиджаки", description: "Женские пиджаки", link: "blazers", buttonText: "Перейти в каталог", images: this.thirdProductImages },
+      { name: "Блузы", description: "Женские блузы", link: "blouse", buttonText: "Перейти в каталог", images: this.fourthProductImages },
+      { name: "Брюки", description: "Женские брюки", link: "trousers", buttonText: "Перейти в каталог", images: this.firstTrousersImages },
+      { name: "Костюмы", description: "Костюмы", link: "costumes", buttonText: "Перейти в каталог", images: this.firstCostumeProductImages }
+    ];
 
-    this.galleryItemService.createGalleryItem({image: this.firstTrousersImages[0]})
-      .subscribe(galleryItem => {
-        const firstCategoryRequest: CategoryRequest = {
-          name: "Брюки",
-          description: "Брюки для женщин на любой случай",
-          link: "trousers",
-          button_text: "Перейти в каталог",
-          preview: galleryItem.id
-        };
-        this.categoriesService.createCategory(firstCategoryRequest)
-          .subscribe(category => trousersCategoryId = category.id);
+    categories.forEach(category => {
+      this.createCategoryWithGallery(category).subscribe(categoryId => {
+        if (category.link === 'trousers') {
+          this.createProductForCategory(categoryId, this.firstTrousersImages, "Брюки", "brown-trousers");
+        }
+        if (category.link === 'costumes') {
+          this.createProductsForCategory(categoryId, [
+            { images: this.firstCostumeProductImages, name: "Костюм", link: "beige-costume" },
+            { images: this.thirdCostumesImages, name: "Костюм", link: "dark-costume" }
+          ]);
+        }
+        if (category.link === 'sport') {
+          this.createProductForCategory(categoryId, this.secondSportsImages, "Спортивный костюм", "sports-costume");
+        }
+        if (category.link === 'blazers') {
+          this.createProductForCategory(categoryId, this.secondBlazerImages, "Пиджак женский", "blazer");
+        }
       });
+    });
+  }
 
-    this.galleryItemService.createGalleryItem({image: this.firstProductImages[0]})
-      .subscribe(galleryItem => {
-        const firstCategoryRequest: CategoryRequest = {
-          name: "Платья",
-          description: "Платья для женщин на любой случай",
-          link: "dresses",
-          button_text: "Перейти в каталог",
-          preview: galleryItem.id
-        };
-        this.categoriesService.createCategory(firstCategoryRequest)
-          .subscribe(category => dressesCategoryId = category.id);
+  private createCategoryWithGallery(category: any): Observable<number> {
+    return this.getImageDimensions(category.images[0]).pipe(
+      switchMap(dimensions => {
+        return this.galleryItemService.createGalleryItem({
+          image: category.images[0],
+          width: dimensions.width,
+          height: dimensions.height
+        }).pipe(
+          switchMap(galleryItem => {
+            const categoryRequest: CategoryRequest = {
+              name: category.name,
+              description: category.description,
+              link: category.link,
+              button_text: category.buttonText,
+              preview: galleryItem.id
+            };
+            return this.categoriesService.createCategory(categoryRequest).pipe(
+              map(newCategory => newCategory.id)
+            );
+          })
+        );
+      })
+    );
+  }
+
+  private createProductForCategory(categoryId: number, images: string[], name: string, link: string) {
+    const galleryItemObservables = images.map(image =>
+      this.getImageDimensions(image).pipe(
+        switchMap(dimensions => this.galleryItemService.createGalleryItem({
+          image,
+          width: dimensions.width,
+          height: dimensions.height
+        }))
+      )
+    );
+
+    forkJoin(galleryItemObservables).subscribe(galleryItems => {
+      const productRequest: ProductRequest = {
+        name,
+        description: "",
+        product_type: 'random_type',
+        link,
+        details: ["first detail", "second detail"],
+        composition: ["first comp", "second comp"],
+        price: Math.random() * 100,
+        category_id: categoryId,
+        gallery: galleryItems.map(galleryItem => galleryItem.id),
+      };
+      this.productService.createProduct(productRequest).subscribe({
+        next: value => console.log(value)
       });
-
-    this.galleryItemService.createGalleryItem({image: this.secondProductImages[0]})
-      .subscribe(galleryItem => {
-        const secondCategoryRequest: CategoryRequest = {
-          name: "Спортивные костюмы",
-          description: "Костюмы в стиле Sport-style отличаются по крою и материалам",
-          link: "sport",
-          button_text: "Перейти в каталог",
-          preview: galleryItem.id
-        };
-        this.categoriesService.createCategory(secondCategoryRequest)
-          .subscribe(category => sportsCategoryId = category.id);
-      })
-
-    this.galleryItemService.createGalleryItem({image: this.thirdProductImages[0]})
-      .subscribe(galleryItem => {
-        const categoryRequest: CategoryRequest = {
-          name: "Пиджаки",
-          description: "Женские пиджаки",
-          link: "blazers",
-          button_text: "Перейти в каталог",
-          preview: galleryItem.id
-        };
-        this.categoriesService.createCategory(categoryRequest)
-          .subscribe(category => blazerCategoryId = category.id);
-      })
-
-    this.galleryItemService.createGalleryItem({image: this.fourthProductImages[0]})
-      .subscribe(galleryItem => {
-        const secondCategoryRequest: CategoryRequest = {
-          name: "Блузы",
-          description: "Женские блузы",
-          link: "blouse",
-          button_text: "Перейти в каталог",
-          preview: galleryItem.id
-        };
-        this.categoriesService.createCategory(secondCategoryRequest)
-          .subscribe(category => blouseCategoryId = category.id);
-      })
-
-    this.galleryItemService.createGalleryItem({image: this.firstCostumeProductImages[0]})
-      .subscribe(galleryItem => {
-        const secondCategoryRequest: CategoryRequest = {
-          name: "Костюмы",
-          description: "Костюмы",
-          link: "costumes",
-          button_text: "Перейти в каталог",
-          preview: galleryItem.id
-        };
-        this.categoriesService.createCategory(secondCategoryRequest)
-          .subscribe(category => costumesCategoryId = category.id);
-      })
-
-    const firstProductGalleryItemObservables = this.firstProductImages.map(element => {
-      return this.galleryItemService.createGalleryItem({image: element});
     });
+  }
 
-    const secondProductGalleryItemObservables = this.secondProductImages.map(element => {
-      return this.galleryItemService.createGalleryItem({image: element});
+  private createProductsForCategory(categoryId: number, products: { images: string[], name: string, link: string }[]) {
+    products.forEach(product => {
+      this.createProductForCategory(categoryId, product.images, product.name, product.link);
     });
-
-    const thirdProductGalleryItemObservables = this.thirdProductImages.map(element => {
-      return this.galleryItemService.createGalleryItem({image: element});
-    });
-
-    const fourthProductGalleryItemObservables = this.fourthProductImages.map(element => {
-      return this.galleryItemService.createGalleryItem({image: element});
-    });
-
-    const firstCostumeProductGalleryItemObservables = this.firstCostumeProductImages.map(element => {
-      return this.galleryItemService.createGalleryItem({image: element});
-    });
-
-    const secondSportsProductGalleryItemObservables = this.secondSportsImages.map(element => {
-      return this.galleryItemService.createGalleryItem({image: element});
-    });
-
-    const secondBlazerProductGalleryItemObservables = this.secondBlazerImages.map(element => {
-      return this.galleryItemService.createGalleryItem({image: element});
-    });
-
-    const secondCostumesProductGalleryItemObservables = this.secondCostumesImages.map(element => {
-      return this.galleryItemService.createGalleryItem({image: element});
-    });
-
-    const thirdCostumesProductGalleryItemObservables = this.thirdCostumesImages.map(element => {
-      return this.galleryItemService.createGalleryItem({image: element});
-    });
-
-    const firstTrousersProductGalleryItemObservables = this.firstTrousersImages.map(element => {
-      return this.galleryItemService.createGalleryItem({image: element});
-    });
-
-    const secondDressesProductGalleryItemObservables = this.secondDressesImages.map(element => {
-      return this.galleryItemService.createGalleryItem({image: element});
-    });
-
-    const fourthCostumesProductGalleryItemObservables = this.fourthCostumesImages.map(element => {
-      return this.galleryItemService.createGalleryItem({image: element});
-    });
-
-    forkJoin(firstTrousersProductGalleryItemObservables)
-      .subscribe((galleryItems) => {
-          const productRequest: ProductRequest = {
-            name: "Брюки",
-            description: "Product description ",
-            product_type: 'random_type',
-            link: "brown-trousers",
-            details: ["first detail", "second detail"],
-            composition: ["first comp", "second comp"],
-            price: Math.random() * 100,
-            category_id: trousersCategoryId,
-            gallery: galleryItems.map(galleryItem => galleryItem.id),
-          };
-          this.productService.createProduct(productRequest).subscribe({
-            next: value => console.log(value)
-          });
-        }
-      );
-
-    /*forkJoin(secondProductGalleryItemObservables)
-      .subscribe((galleryItems) => {
-          const productRequest: ProductRequest = {
-            name: "Спортивный костюм",
-            description: "Product description ",
-            product_type: 'random_type',
-            link: "sports-suit",
-            details: ["first detail", "second detail"],
-            composition: ["first comp", "second comp"],
-            price: Math.random() * 100,
-            category_id: sportsCategoryId,
-            gallery: galleryItems.map(galleryItem => galleryItem.id),
-          };
-          this.productService.createProduct(productRequest).subscribe({
-            next: value => console.log(value)
-          });
-        }
-      );*/
-
-    /*forkJoin(secondDressesProductGalleryItemObservables)
-      .subscribe((galleryItems) => {
-          const productRequest: ProductRequest = {
-            name: "Чёрное платье",
-            description: "",
-            product_type: 'random_type',
-            link: "blackest-dress",
-            details: ["first detail", "second detail"],
-            composition: ["first comp", "second comp"],
-            price: Math.random() * 100,
-            category_id: dressesCategoryId,
-            gallery: galleryItems.map(galleryItem => galleryItem.id),
-          };
-          this.productService.createProduct(productRequest).subscribe({
-            next: value => console.log(value)
-          });
-        }
-      );*/
-
-    /*forkJoin(firstProductGalleryItemObservables)
-      .subscribe((galleryItems) => {
-          const productRequest: ProductRequest = {
-            name: "Чёрное платье",
-            description: "",
-            product_type: 'random_type',
-            link: "black-dress",
-            details: ["first detail", "second detail"],
-            composition: ["first comp", "second comp"],
-            price: Math.random() * 100,
-            category_id: dressesCategoryId,
-            gallery: galleryItems.map(galleryItem => galleryItem.id),
-          };
-          this.productService.createProduct(productRequest).subscribe({
-            next: value => console.log(value)
-          });
-        }
-      );*/
-
-    /*forkJoin(thirdProductGalleryItemObservables)
-      .subscribe((galleryItems) => {
-          const productRequest: ProductRequest = {
-            name: "Пиджак",
-            description: "",
-            product_type: 'random_type',
-            link: "blazer",
-            details: ["first detail", "second detail"],
-            composition: ["first comp", "second comp"],
-            price: Math.random() * 100,
-            category_id: blazerCategoryId,
-            gallery: galleryItems.map(galleryItem => galleryItem.id),
-          };
-          this.productService.createProduct(productRequest).subscribe({
-            next: value => console.log(value)
-          });
-        }
-      );*/
-
-    forkJoin(firstCostumeProductGalleryItemObservables)
-      .subscribe((galleryItems) => {
-          const productRequest: ProductRequest = {
-            name: "Костюм",
-            description: "",
-            product_type: 'random_type',
-            link: "beige-costume",
-            details: ["first detail", "second detail"],
-            composition: ["first comp", "second comp"],
-            price: Math.random() * 100,
-            category_id: costumesCategoryId,
-            gallery: galleryItems.map(galleryItem => galleryItem.id),
-          };
-          this.productService.createProduct(productRequest).subscribe({
-            next: value => console.log(value)
-          });
-        }
-      );
-
-    /*forkJoin(fourthCostumesProductGalleryItemObservables)
-      .subscribe((galleryItems) => {
-          const productRequest: ProductRequest = {
-            name: "Костюм",
-            description: "",
-            product_type: 'random_type',
-            link: "another-costume",
-            details: ["first detail", "second detail"],
-            composition: ["first comp", "second comp"],
-            price: Math.random() * 100,
-            category_id: costumesCategoryId,
-            gallery: galleryItems.map(galleryItem => galleryItem.id),
-          };
-          this.productService.createProduct(productRequest).subscribe({
-            next: value => console.log(value)
-          });
-        }
-      );*/
-
-    /*forkJoin(secondCostumesProductGalleryItemObservables)
-      .subscribe((galleryItems) => {
-          const productRequest: ProductRequest = {
-            name: "Костюм",
-            description: "",
-            product_type: 'random_type',
-            link: "dark-costume",
-            details: ["first detail", "second detail"],
-            composition: ["first comp", "second comp"],
-            price: Math.random() * 100,
-            category_id: costumesCategoryId,
-            gallery: galleryItems.map(galleryItem => galleryItem.id),
-          };
-          this.productService.createProduct(productRequest).subscribe({
-            next: value => console.log(value)
-          });
-        }
-      );*/
-
-    forkJoin(thirdCostumesProductGalleryItemObservables)
-      .subscribe((galleryItems) => {
-          const productRequest: ProductRequest = {
-            name: "Костюм",
-            description: "",
-            product_type: 'random_type',
-            link: "darkest-costume",
-            details: ["first detail", "second detail"],
-            composition: ["first comp", "second comp"],
-            price: Math.random() * 100,
-            category_id: costumesCategoryId,
-            gallery: galleryItems.map(galleryItem => galleryItem.id),
-          };
-          this.productService.createProduct(productRequest).subscribe({
-            next: value => console.log(value)
-          });
-        }
-      );
-
-    forkJoin(secondSportsProductGalleryItemObservables)
-      .subscribe((galleryItems) => {
-          const productRequest: ProductRequest = {
-            name: "Спортивный костюм",
-            description: "",
-            product_type: 'random_type',
-            link: "second-beige-sports-costume",
-            details: ["first detail", "second detail"],
-            composition: ["first comp", "second comp"],
-            price: Math.random() * 100,
-            category_id: sportsCategoryId,
-            gallery: galleryItems.map(galleryItem => galleryItem.id),
-          };
-          this.productService.createProduct(productRequest).subscribe({
-            next: value => console.log(value)
-          });
-        }
-      );
-
-    forkJoin(secondBlazerProductGalleryItemObservables)
-      .subscribe((galleryItems) => {
-          const productRequest: ProductRequest = {
-            name: "Пиджак женский",
-            description: "",
-            product_type: 'random_type',
-            link: "beige-sports-costume",
-            details: ["first detail", "second detail"],
-            composition: ["first comp", "second comp"],
-            price: Math.random() * 100,
-            category_id: blazerCategoryId,
-            gallery: galleryItems.map(galleryItem => galleryItem.id),
-          };
-          this.productService.createProduct(productRequest).subscribe({
-            next: value => console.log(value)
-          });
-        }
-      );
-
-    /*forkJoin(fourthProductGalleryItemObservables)
-      .subscribe((galleryItems) => {
-          const productRequest: ProductRequest = {
-            name: "Блуза",
-            description: "Женскиая блуза",
-            product_type: 'random_type',
-            link: "black-blouse",
-            details: ["first detail", "second detail"],
-            composition: ["first comp", "second comp"],
-            price: Math.random() * 100,
-            category_id: firstCategoryId,
-            gallery: galleryItems.map(galleryItem => galleryItem.id),
-          };
-          this.productService.createProduct(productRequest).subscribe({
-            next: value => console.log(value)
-          });
-        }
-      );*/
   }
 
   readonly firstProductImages = [ // платья

@@ -6,9 +6,8 @@ import {ActivatedRoute} from "@angular/router";
 import {Select, Store} from "@ngxs/store";
 import {GetAllProduct, ProductState} from "../../store/product/state/Product.state";
 import {Observable} from "rxjs";
-import {Product} from "../../models/product";
 import {map} from "rxjs/operators";
-import {AsyncPipe, NgForOf, NgIf} from "@angular/common";
+import {AsyncPipe, NgForOf, NgIf, NgOptimizedImage} from "@angular/common";
 import {NgxSplideModule} from "ngx-splide";
 import {
   HlmTabsComponent,
@@ -16,6 +15,9 @@ import {
   HlmTabsListComponent,
   HlmTabsTriggerDirective
 } from "@spartan-ng/ui-tabs-helm";
+import {Product} from "../../models/Product";
+import {ResponsiveImage} from "../../utilities/images/responsive-image";
+import {ResponsiveImageService} from "../../utilities/images/responsive-image.service";
 
 @Component({
   selector: 'app-product-page',
@@ -32,10 +34,11 @@ import {
     HlmTabsComponent,
     HlmTabsContentDirective,
     HlmTabsTriggerDirective,
+    NgOptimizedImage,
   ],
   template: `
     <app-header/>
-    <ng-container *ngIf="currentProduct | async as product">
+    <ng-container *ngIf="currentProduct$ | async as product">
       <div class="flex flex-col lg:flex-row-reverse lg:justify-between">
         <splide *ngIf="product.gallery.length > 1"
                 class="w-full lg:w-1/2"
@@ -45,14 +48,29 @@ import {
          classes: {
             pagination: 'splide__pagination !bottom-[-1.5rem]',
          }}">
-          <splide-slide *ngFor="let galleryItem of product.gallery">
-            <img class="max-h-[574px] lg:max-h-full [cursor:url(data:image/svg+xml;base64,PHN2ZyBkYXRhLW5hbWU9IkxheWVyIDEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjQ0LjA1IiBoZWlnaHQ9IjQ0LjA1IiB2aWV3Qm94PSIwIDAgNDQuMDUgNDQuMDUiPjxwYXRoIGQ9Ik00NS4wNSwyM2EyMiwyMiwwLDEsMC0yMiwyMkEyMiwyMiwwLDAsMCw0NS4wNSwyM1oiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0xIC0xKSIgc3R5bGU9ImZpbGw6I2ZmZiIvPjxwYXRoIGQ9Ik0yMywxNi42NVYyOS40TTI5LjQsMjNIMTYuNjUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0xIC0xKSIgc3R5bGU9ImZpbGw6bm9uZTtzdHJva2U6IzAwMDtzdHJva2UtbGluZWNhcDpyb3VuZDtzdHJva2UtbGluZWpvaW46cm91bmQiLz48L3N2Zz4=)_22_22,zoom-in] lg:object-contain lg:w-full h-full" (click)="toggleImageModal(galleryItem.image)" [src]="galleryItem.image" [alt]="product.name"/>
+          <splide-slide *ngFor="let image of currentProductGallery">
+            <img
+              class="lg:w-full [cursor:url(data:image/svg+xml;base64,PHN2ZyBkYXRhLW5hbWU9IkxheWVyIDEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjQ0LjA1IiBoZWlnaHQ9IjQ0LjA1IiB2aWV3Qm94PSIwIDAgNDQuMDUgNDQuMDUiPjxwYXRoIGQ9Ik00NS4wNSwyM2EyMiwyMiwwLDEsMC0yMiwyMkEyMiwyMiwwLDAsMCw0NS4wNSwyM1oiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0xIC0xKSIgc3R5bGU9ImZpbGw6I2ZmZiIvPjxwYXRoIGQ9Ik0yMywxNi42NVYyOS40TTI5LjQsMjNIMTYuNjUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0xIC0xKSIgc3R5bGU9ImZpbGw6bm9uZTtzdHJva2U6IzAwMDtzdHJva2UtbGluZWNhcDpyb3VuZDtzdHJva2UtbGluZWpvaW46cm91bmQiLz48L3N2Zz4=)_22_22,zoom-in] lg:object-contain"
+              (click)="toggleImageModal(image)"
+              [ngSrc]="image.asset.filePath"
+              [alt]="image.asset.alt"
+              [width]="image.asset.width"
+              [height]="image.asset.height"
+              [priority]="false"
+              [ngSrcset]="image.attributes.breakpoints.ngSrcSet.asString"
+              [sizes]="image.attributes.sizes.asString"/>
           </splide-slide>
         </splide>
-        <img *ngIf="product.gallery.length <= 1" class="max-h-[574px] lg:max-h-full [cursor:url(data:image/svg+xml;base64,PHN2ZyBkYXRhLW5hbWU9IkxheWVyIDEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjQ0LjA1IiBoZWlnaHQ9IjQ0LjA1IiB2aWV3Qm94PSIwIDAgNDQuMDUgNDQuMDUiPjxwYXRoIGQ9Ik00NS4wNSwyM2EyMiwyMiwwLDEsMC0yMiwyMkEyMiwyMiwwLDAsMCw0NS4wNSwyM1oiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0xIC0xKSIgc3R5bGU9ImZpbGw6I2ZmZiIvPjxwYXRoIGQ9Ik0yMywxNi42NVYyOS40TTI5LjQsMjNIMTYuNjUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0xIC0xKSIgc3R5bGU9ImZpbGw6bm9uZTtzdHJva2U6IzAwMDtzdHJva2UtbGluZWNhcDpyb3VuZDtzdHJva2UtbGluZWpvaW46cm91bmQiLz48L3N2Zz4=)_22_22,zoom-in] w-full lg:w-1/2 h-full"
-             (click)="toggleImageModal(product.gallery.length === 0 ? product.preview.image : product.gallery[0].image)"
-             [src]="product.gallery.length === 0 ? product.preview.image : product.gallery[0].image"
-             [alt]="product.name"/>
+        <img *ngIf="product.gallery.length <= 1"
+             class="w-full h-full lg:w-1/2 [cursor:url(data:image/svg+xml;base64,PHN2ZyBkYXRhLW5hbWU9IkxheWVyIDEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjQ0LjA1IiBoZWlnaHQ9IjQ0LjA1IiB2aWV3Qm94PSIwIDAgNDQuMDUgNDQuMDUiPjxwYXRoIGQ9Ik00NS4wNSwyM2EyMiwyMiwwLDEsMC0yMiwyMkEyMiwyMiwwLDAsMCw0NS4wNSwyM1oiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0xIC0xKSIgc3R5bGU9ImZpbGw6I2ZmZiIvPjxwYXRoIGQ9Ik0yMywxNi42NVYyOS40TTI5LjQsMjNIMTYuNjUiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0xIC0xKSIgc3R5bGU9ImZpbGw6bm9uZTtzdHJva2U6IzAwMDtzdHJva2UtbGluZWNhcDpyb3VuZDtzdHJva2UtbGluZWpvaW46cm91bmQiLz48L3N2Zz4=)_22_22,zoom-in]"
+             (click)="toggleImageModal(currentProductGallery!.length === 0 ? currentProductGallery![0] : currentProductGallery![0])"
+             [ngSrc]="currentProductPreview!.asset.filePath"
+             [alt]="currentProductPreview!.asset.alt"
+             [width]="currentProductPreview!.asset.width"
+             [height]="currentProductPreview!.asset.height"
+             [priority]="false"
+             [ngSrcset]="currentProductPreview!.attributes.breakpoints.ngSrcSet.asString"
+             [sizes]="currentProductPreview!.attributes.sizes.asString"/>
         <div class="p-6 lg:p-24">
           <div class="pt-9">
             <h2 class="font-medium uppercase">{{ product.name }}</h2>
@@ -101,8 +119,8 @@ import {
       </div>
       <div *ngIf="isModalActive" class="z-[60]" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <button
-          (click)="toggleImageModal()"
-          class="fixed z-50 top-[96px] lg:top-[102px] right-[24px] flex h-12 w-12 flex-shrink-0 items-center bg-button-header-white justify-center rounded-full sm:h-10 sm:w-10">
+          (click)="toggleImageModal(null)"
+          class="hidden lg:flex fixed z-50 top-[96px] lg:top-[102px] right-[8px] h-12 w-12 flex-shrink-0 items-center bg-button-header-white justify-center rounded-full sm:h-10 sm:w-10">
           <svg class="" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24">
             <path fill="currentColor"
                   d="M17.59 5L12 10.59L6.41 5L5 6.41L10.59 12L5 17.59L6.41 19L12 13.41L17.59 19L19 17.59L13.41 12L19 6.41L17.59 5Z"/>
@@ -111,12 +129,20 @@ import {
         <div class="fixed w-full h-full inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
 
         <div class="overflow-hidden fixed inset-0 z-10 w-screen md:overflow-y-auto">
-          <div class="flex min-h-full mt-16 md:mt-0 md:items-end justify-center p-4 text-center items-center sm:p-0">
+          <div class="flex w-full min-h-full mt-16 md:mt-0 md:items-end justify-center text-center items-center">
 
-            <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-full">
+            <div
+              class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 w-full sm:max-w-full">
               <div class="bg-white">
                 <div class="sm:flex sm:items-start">
-                  <img (click)="toggleImageModal()" class="z-[60] w-full h-full" [src]="this.currentImageUrl">
+                  <img (click)="toggleImageModal(null)" class="z-[60] w-full h-full"
+                       [ngSrc]="activeImage!.asset.filePath"
+                       [alt]="activeImage!.asset.alt"
+                       [width]="activeImage!.asset.width"
+                       [height]="activeImage!.asset.height"
+                       [priority]="true"
+                       [ngSrcset]="activeImage!.attributes.breakpoints.ngSrcSet.asString"
+                       [sizes]="activeImage!.attributes.sizes.asString">
                 </div>
               </div>
             </div>
@@ -133,18 +159,21 @@ export class ProductPageComponent {
   @Select(ProductState.selectLoading) loading$!: Observable<boolean>;
   @Select(ProductState.selectError) error$!: Observable<Error | undefined>;
 
-  private readonly link: string | null = null;
-  protected currentProduct?: Observable<Product | undefined>;
-  isModalActive: boolean = false;
-  currentImageUrl: string | undefined = undefined;
+  protected currentProductGallery?: ResponsiveImage[];
+  protected currentProductPreview?: ResponsiveImage;
 
-  toggleImageModal(imageUrl?: string) {
-    if (!this.isModalActive) this.currentImageUrl = imageUrl;
-    else this.currentImageUrl = undefined;
+  private readonly link: string | null = null;
+  protected currentProduct$?: Observable<Product | null>;
+  isModalActive: boolean = false;
+  activeImage: ResponsiveImage | null = null;
+
+  toggleImageModal(image: ResponsiveImage | null) {
+    if (!this.isModalActive) this.activeImage = image;
+    else this.activeImage = null;
     this.isModalActive = !this.isModalActive;
   }
 
-  constructor(private route: ActivatedRoute, private store: Store) {
+  constructor(private route: ActivatedRoute, private store: Store, responsiveImageService: ResponsiveImageService) {
     window.scroll({
       top: 0,
     });
@@ -152,7 +181,19 @@ export class ProductPageComponent {
     this.products$.subscribe({
       next: (products) => {
         if (!products) this.store.dispatch(new GetAllProduct());
-        else this.currentProduct = this.products$.pipe(map(products => products.find(product => product.link === this.link)));
+        else {
+          this.currentProduct$ = this.products$.pipe(
+            map(products => products.find(product => product.link === this.link)),
+            map(product => {
+              if (product) {
+                this.currentProductGallery = product.gallery.map(item => responsiveImageService.convertGalleryItemToImageAsset(item, item.height));
+                this.currentProductPreview = product.preview ? responsiveImageService.convertGalleryItemToImageAsset(product.preview, product.preview.height) : responsiveImageService.convertGalleryItemToImageAsset(product.gallery[0], product.gallery[0].height);
+                return product;
+              }
+              return null;
+            })
+          );
+        }
       }
     });
   }

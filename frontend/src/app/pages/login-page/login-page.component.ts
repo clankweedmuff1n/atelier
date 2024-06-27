@@ -6,7 +6,7 @@ import {FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators} fr
 import {Router} from "@angular/router";
 import {Store} from "@ngxs/store";
 import {AuthState, Login} from "../../store/auth/state/Auth.state";
-import {AuthenticationRequest} from "../../models/AuthenticationRequest";
+import {AuthenticationRequest} from "../../models/requests/AuthenticationRequest";
 import {CustomModalComponent} from "../../components/custom-modal/custom-modal.component";
 import {User} from "../../models/User";
 

@@ -1,9 +1,8 @@
-import {Product} from "../../../models/product";
 import {Action, Selector, State, StateContext} from "@ngxs/store";
 import {Injectable} from "@angular/core";
 import {ProductService} from "../service/Product.service";
 import {catchError, tap, throwError} from "rxjs";
-import {environment} from "../../../../environments/environment";
+import {Product} from "../../../models/Product";
 
 export class GetAllProduct {
   static readonly type = '[Product] Get All';
@@ -40,12 +39,7 @@ export class ProductState {
       tap((response) => {
         ctx.setState({
           ...state,
-          products: response.map(product => {
-            product.gallery = product.gallery.map(galleryItem => {
-              return galleryItem.image.includes("http") ? galleryItem : {id: galleryItem.id, image: `${environment.apiUrl}/files/${galleryItem.image}`};
-            })
-            return product;
-          }),
+          products: response,
           loading: false,
           error: undefined,
         });

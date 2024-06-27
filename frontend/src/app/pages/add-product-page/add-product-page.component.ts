@@ -5,13 +5,13 @@ import {FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFor
 import {AsyncPipe, NgForOf, NgIf} from "@angular/common";
 import {CategoryState, GetAllCategory} from "../../store/category/state/Category.state";
 import {Select, Store} from "@ngxs/store";
-import {Category} from "../../models/category";
-import {forkJoin, Observable} from "rxjs";
+import {Category} from "../../models/Category";
+import {forkJoin, Observable, switchMap} from "rxjs";
 import {ProductService} from "../../store/product/service/Product.service";
 import {GalleryItemService} from "../../store/galleryItem/service/GalleryItem.service";
-import {GalleryItem} from "../../models/galleryItem";
 import {ProductRequest} from "../../models/requests/productRequest";
 import {DELETEComponent} from "../../components/delete/delete.component";
+import {GalleryItem} from "../../models/GalleryItem";
 
 @Component({
   selector: 'app-add-product-page',
@@ -42,13 +42,15 @@ import {DELETEComponent} from "../../components/delete/delete.component";
                type="number" formControlName="price">
         <input value="" class="w-full mb-5 h-9 pl-4 outline-0 border border-color-gray" placeholder="Ссылка на товар"
                type="text" formControlName="link">
-        <input value="" class="w-full mb-5 h-9 pl-4 outline-0 border border-color-gray" placeholder="Детали (пишите через точку с запятой ;)"
+        <input value="" class="w-full mb-5 h-9 pl-4 outline-0 border border-color-gray"
+               placeholder="Детали (пишите через точку с запятой ;)"
                type="text" formControlName="details">
-        <input value="" class="w-full mb-5 h-9 pl-4 outline-0 border border-color-gray" placeholder="Состав (пишите через точку с запятой ;)"
+        <input value="" class="w-full mb-5 h-9 pl-4 outline-0 border border-color-gray"
+               placeholder="Состав (пишите через точку с запятой ;)"
                type="text" formControlName="composition">
         <select class="w-full mb-5 h-9 pl-4 outline-0 border border-color-gray" formControlName="category_id">
-          <option  [value]="category.id" *ngFor="let category of categories$ | async">
-            {{category.name}}
+          <option [value]="category.id" *ngFor="let category of categories$ | async">
+            {{ category.name }}
           </option>
         </select>
         <div *ngIf="!isFile" formArrayName="inputs">
@@ -83,12 +85,49 @@ export class AddProductPageComponent {
   protected isFile: boolean = true;
   private selectedFiles: File[] = [];
 
-  onFilesSelected(event: any) {
-    this.selectedFiles = Array.from(event.target.files);
+  onFilesSelected(event: Event) {
+    const element = event.currentTarget as HTMLInputElement;
+    let fileList: FileList | null = element.files;
+    if (fileList) {
+      this.selectedFiles = Array.from(fileList);
+    }
+  }
+
+  getImageDimensions(imageSrc: string | File): Observable<{ width: number, height: number }> {
+    return new Observable(observer => {
+      const img = new Image();
+      img.onload = () => {
+        observer.next({ width: img.width, height: img.height });
+        observer.complete();
+      };
+      img.onerror = (err) => {
+        observer.error(err);
+      };
+      if (typeof imageSrc === 'string') {
+        img.src = imageSrc;
+      } else {
+        img.src = URL.createObjectURL(imageSrc);
+      }
+    });
   }
 
   submit() {
-    const itemCreationObservables: Observable<GalleryItem>[] = this.isFile ? this.selectedFiles.map((item: File) => this.galleryItemService.createGalleryItemFromFile(item)) : this.addProductForm.value.inputs.slice(0, this.addProductForm.value.inputs.length - 1).map((item: string) => this.galleryItemService.createGalleryItem({image: item}));
+    const inputs = this.addProductForm.value.inputs.slice(0, this.addProductForm.value.inputs.length - 1);
+    const sources = this.isFile ? this.selectedFiles : inputs;
+
+    const itemCreationObservables: Observable<GalleryItem>[] = sources.map((source: string | File) => {
+      return this.getImageDimensions(source).pipe(
+        switchMap(({ width, height }) => {
+          if (this.isFile) {
+            console.log(`${width} ${height}`)
+            return this.galleryItemService.createGalleryItemFromFile(source as File, width, height);
+          } else {
+            console.log(`${width} ${height}`)
+            return this.galleryItemService.createGalleryItem({ image: source as string, width, height });
+          }
+        })
+      );
+    });
     forkJoin(itemCreationObservables).subscribe({
       next: (createdImages: GalleryItem[]) => {
         const productRequest: ProductRequest = {

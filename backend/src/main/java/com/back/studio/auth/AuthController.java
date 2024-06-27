@@ -18,7 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthService authService;
+    private final UserService authService;
 
     @PostMapping("/register")
     public ResponseEntity<AuthenticationResponse> register(

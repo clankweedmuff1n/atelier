@@ -3,10 +3,10 @@ import {HeaderButtonComponent} from "../../utilities/header-button/header-button
 import {NgClass, NgForOf, NgIf, NgOptimizedImage, NgStyle} from "@angular/common";
 import {HeaderButton} from "../../types/HeaderButton.type";
 import {Router} from "@angular/router";
-import {MISC_IMAGES, MiscImages} from "../../images/misc-images";
-import {ResponsiveImageAttributesService} from "../../images/responsive-image-attributes.service";
-import {ResponsiveImage} from "../../images/responsive-image";
-import {Px} from "../../css/unit/px";
+import {MISC_IMAGES, MiscImages} from "../../utilities/images/misc-images";
+import {ResponsiveImageAttributesService} from "../../utilities/images/responsive-image-attributes.service";
+import {ResponsiveImage} from "../../utilities/images/responsive-image";
+import {Px} from "../../utilities/css/unit/px";
 
 @Component({
   selector: 'app-header',
@@ -21,7 +21,7 @@ import {Px} from "../../css/unit/px";
   ],
   template: `
     <header #header class="top-0 bg-button-header-white fixed w-full z-30">
-      <div class="flex justify-between py-5">
+      <div class="flex justify-between my-5">
         <div class="flex items-center">
           <a [href]="button.link" *ngFor="let button of this.headerButtons[0]">
             <header-button class="px-4 hidden lg:flex">{{ button.name }}</header-button>
@@ -108,12 +108,13 @@ import {Px} from "../../css/unit/px";
         </a>
       </div>
     </div>
-    <div [ngStyle]="{ 'margin-bottom.px': headerHeight }"></div>
+    <div #filler></div>
   `,
 })
 export class HeaderComponent implements AfterViewInit {
   @ViewChild("header", {read: ElementRef}) header!: ElementRef;
-  protected headerHeight: number = 0;
+  @ViewChild("filler", {read: ElementRef}) filler!: ElementRef;
+  statusMenuActive: boolean = false;
 
   protected readonly horizontalLogo: ResponsiveImage;
   // 👇 Keep in sync with SCSS for responsive sizing
@@ -134,10 +135,8 @@ export class HeaderComponent implements AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    this.headerHeight = this.header.nativeElement.offsetHeight;
+    this.filler.nativeElement.style.height = this.header.nativeElement.offsetHeight + "px";
   }
-
-  statusMenuActive: boolean = false;
 
   headerButtons: Array<Array<HeaderButton>> = [
     [
@@ -146,7 +145,7 @@ export class HeaderComponent implements AfterViewInit {
         link: "about-us"
       },
       {
-        name: "Shop",
+        name: "Каталог",
         link: "shop"
       },
       {

@@ -1,5 +1,6 @@
 package com.back.studio.files;
 
+import com.back.studio.products.GalleryItem.GalleryItem;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -23,7 +24,15 @@ public class FileUploadController {
         this.storageService = storageService;
     }
 
-    @GetMapping("/{filename:.+}")
+    @GetMapping("/get")
+    public ResponseEntity<Resource> getImage(@RequestParam String src, @RequestParam String width) {
+        Resource resource = storageService.findOrCreateImage(src, width);
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=\"" + resource.getFilename() + "\"")
+                .body(resource);
+    }
+
+    /*@GetMapping("/{filename:.+}")
     @ResponseBody
     public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
 
@@ -34,7 +43,7 @@ public class FileUploadController {
 
         return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION,
                 "attachment; filename=\"" + file.getFilename() + "\"").body(file);
-    }
+    }*/
 
     @ExceptionHandler(StorageFileNotFoundException.class)
     public ResponseEntity<?> handleStorageFileNotFound(StorageFileNotFoundException exc) {

@@ -10,7 +10,9 @@ public interface StorageService {
 
     void init();
 
-    void store(MultipartFile file);
+    Resource findOrCreateImage(String src, String width);
+
+    String store(MultipartFile file);
 
     Stream<Path> loadAll();
 

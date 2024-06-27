@@ -11,10 +11,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GalleryItemRequest {
+    private String name;
+    private String alt;
     @JsonProperty("image")
     private String imageUrl;
-    @JsonProperty("category_id")
-    private Long categoryId;
-    @JsonProperty("product_id")
-    private Long productId;
+    private Integer width;
+    private Integer height;
 }

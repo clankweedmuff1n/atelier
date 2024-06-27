@@ -1,5 +1,6 @@
 package com.back.studio.products.Product;
 
+import com.back.studio.auth.user.User;
 import com.back.studio.products.Category.Category;
 import com.back.studio.products.GalleryItem.GalleryItem;
 import com.back.studio.products.Review.Review;
@@ -51,4 +52,12 @@ public class Product {
     private GalleryItem preview;
     @OneToMany(fetch = FetchType.EAGER)
     private List<GalleryItem> gallery;
+
+    @ManyToMany(mappedBy = "cart")
+    @JsonIgnore
+    private List<User> usersInCart;
+
+    @ManyToMany(mappedBy = "wishlist")
+    @JsonIgnore
+    private List<User> usersInWishlist;
 }
